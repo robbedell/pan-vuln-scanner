@@ -467,3 +467,68 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(0,0,0,0.3);
   color: #fff;
 }
+
+/* PDF Theme Styles for html2pdf */
+.pdf-theme {
+  background: white !important;
+  color: black !important;
+  font-family: 'Helvetica', 'Arial', sans-serif;
+  padding: 40px; 
+}
+.pdf-theme h1, .pdf-theme h2, .pdf-theme h3, .pdf-theme h4 {
+  color: #1a365d !important;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+.pdf-theme h1 {
+  font-size: 2.2rem;
+  border-bottom: 2px solid #1a365d;
+}
+.pdf-theme p {
+  color: #333 !important;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.pdf-theme table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  border: 1px solid #cbd5e1;
+  table-layout: fixed;
+}
+.pdf-theme th {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border: 1px solid #cbd5e1;
+  padding: 8px;
+}
+.pdf-theme td {
+  border: 1px solid #cbd5e1;
+  padding: 8px;
+  color: #333 !important;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.pdf-theme pre {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  border-radius: 4px;
+  color: #0f172a !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.pdf-theme code {
+  font-family: monospace;
+  background: #f1f5f9 !important;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #ef4444 !important;
+}
+.pdf-theme ul, .pdf-theme ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333 !important;
+}

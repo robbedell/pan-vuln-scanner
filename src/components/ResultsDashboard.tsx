@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cveDatabase, Vulnerability } from '@/lib/vulnerabilities';
-import { generateJSONReport, generateMarkdownReport } from '@/lib/reportGenerator';
+import { generateJSONReport } from '@/lib/reportGenerator';
 import VulnerabilityCard from './VulnerabilityCard';
 
 interface ResultsProps {
@@ -22,6 +24,8 @@ interface ResultsProps {
 
 export default function ResultsDashboard({ results, targetVersion, aiConfig }: ResultsProps) {
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [pdfMarkdown, setPdfMarkdown] = useState('');
+  
   const isExposed = (vuln: Vulnerability) => {
     if (vuln.triggerInterface === 'GlobalProtect') return results.hasGlobalProtect;
     if (vuln.triggerInterface === 'Management') return results.hasManagement;
@@ -31,40 +35,79 @@ export default function ResultsDashboard({ results, targetVersion, aiConfig }: R
 
   const exposedCount = cveDatabase.filter(isExposed).length;
 
-  const handleGenerateMarkdown = async () => {
-    let summary = '';
-    
-    if (aiConfig && aiConfig.aiBaseUrl) {
-      setIsGeneratingSummary(true);
-      try {
-        const prompt = `Write a 2-paragraph Executive Summary for a vulnerability scan against ${results.target}. 
-The target has the following exposed interfaces: ${results.exposedInterfaces.join(', ') || 'None'}.
-Confirmed CVEs (Exploited): ${results.confirmedCVEs?.join(', ') || 'None'}.
-Make it sound professional, emphasizing business risk. Do not use formatting like bold/italics excessively, keep it clean. Do not include any introduction like "Here is the summary".`;
-
-        const res = await fetch('/api/ai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt,
-            baseURL: aiConfig.aiBaseUrl,
-            model: aiConfig.aiModel,
-            apiKey: aiConfig.aiApiKey,
-            disableStream: true
-          })
-        });
-        
-        const data = await res.json();
-        if (data.content) {
-          summary = data.content;
-        }
-      } catch (err) {
-        console.error('AI Summary failed', err);
-      }
-      setIsGeneratingSummary(false);
+  const handleGeneratePDF = async () => {
+    if (!aiConfig || !aiConfig.aiBaseUrl) {
+      alert("Please configure the AI in Settings first!");
+      return;
     }
     
-    generateMarkdownReport(results, targetVersion, cveDatabase, summary);
+    setIsGeneratingSummary(true);
+    let fullReportMarkdown = '';
+
+    try {
+      const cveContext = cveDatabase.filter(isExposed).map(cve => `
+- ${cve.id} (${cve.name}):
+  Root Cause: ${cve.rootCause}
+  Mitigation: ${cve.howToFix}
+`).join('\n');
+
+      const prompt = `Act as a Senior Security Engineer. Write a comprehensive Penetration Testing Report for a vulnerability scan against ${results.target}.
+The target is running PAN-OS version ${targetVersion || 'Unknown'} and has the following exposed interfaces: ${results.exposedInterfaces.join(', ') || 'None'}.
+Confirmed Exploited CVEs: ${results.confirmedCVEs?.join(', ') || 'None'}.
+Potential Vulnerabilities based on exposed interfaces: ${exposedCount}.
+
+Context on the vulnerabilities:
+${cveContext}
+
+Output the report in Markdown format. Include the following sections: 
+1. Executive Summary
+2. Scope & Target Information
+3. Findings Summary
+4. Technical Details & Root Cause Analysis
+5. Remediation Recommendations
+
+Be highly professional, detailed, and use Markdown tables and code blocks where appropriate. Do not include any conversational intro/outro text, just the Markdown report.`;
+
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          baseURL: aiConfig.aiBaseUrl,
+          model: aiConfig.aiModel,
+          apiKey: aiConfig.aiApiKey,
+          disableStream: true
+        })
+      });
+      
+      const data = await res.json();
+      if (data.content) {
+        fullReportMarkdown = data.content;
+        setPdfMarkdown(fullReportMarkdown);
+        
+        // Give React a tick to render the hidden markdown container
+        setTimeout(async () => {
+          const element = document.getElementById('pdf-report-container');
+          if (element) {
+            // Dynamically import html2pdf
+            const html2pdf = (await import('html2pdf.js')).default;
+            const opt = {
+              margin:       0.5,
+              filename:     `Vulnerability_Report_${results.target}.pdf`,
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2 },
+              jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+          }
+        }, 500);
+      }
+    } catch (err) {
+      console.error('AI PDF Generation failed', err);
+      alert("Failed to generate AI PDF Report. Check your AI connection.");
+    } finally {
+      setIsGeneratingSummary(false);
+    }
   };
 
   return (
@@ -99,21 +142,30 @@ Make it sound professional, emphasizing business risk. Do not use formatting lik
 
       <div className="slide-up" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '2rem', animationDelay: '0.1s' }}>
         <button 
-          onClick={handleGenerateMarkdown}
-          disabled={isGeneratingSummary}
+          onClick={handleGeneratePDF}
+          disabled={isGeneratingSummary || !aiConfig?.aiBaseUrl}
           className="btn" 
-          style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
+          style={{ background: 'rgba(168, 85, 247, 0.15)', border: '1px solid rgba(168, 85, 247, 0.4)', color: '#d8b4fe', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
         >
-          {isGeneratingSummary ? '🤖 Writing AI Summary...' : '📥 Download Markdown Report'}
+          {isGeneratingSummary ? '🤖 Generating Professional PDF Report...' : '🤖 Generate AI PDF Report'}
         </button>
         <button 
           onClick={() => generateJSONReport(results, targetVersion, cveDatabase)}
           className="btn" 
           style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#e2e8f0', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
         >
-          📥 Download JSON Data
+          📥 Download Raw JSON
         </button>
       </div>
+
+      {/* Hidden container for PDF rendering */}
+      {pdfMarkdown && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '800px' }}>
+          <div id="pdf-report-container" className="pdf-theme ai-markdown-container">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{pdfMarkdown}</ReactMarkdown>
+          </div>
+        </div>
+      )}
 
       {results.isReachable && (
         <div className="vuln-section slide-up" style={{ animationDelay: '0.2s' }}>
