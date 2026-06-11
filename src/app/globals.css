@@ -276,8 +276,11 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--surface-border);
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
+  overflow: hidden;
+  width: 100%;
 }
 
 .vuln-block h4 {
@@ -389,6 +392,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* React Markdown Styles */
+.ai-markdown-container {
+  max-width: 100%;
+  overflow-x: auto;
+  word-break: break-word;
+}
 .ai-markdown-container h1, .ai-markdown-container h2, .ai-markdown-container h3 {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
@@ -414,6 +422,7 @@ h1, h2, h3, h4, h5, h6 {
   overflow-x: auto;
   margin-bottom: 1rem;
   border: 1px solid rgba(255,255,255,0.1);
+  max-width: 100%;
 }
 .ai-markdown-container pre code {
   background: transparent;
