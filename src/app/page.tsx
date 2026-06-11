@@ -9,6 +9,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<any>(null);
+  const [scanLogs, setScanLogs] = useState<string[]>([]);
   
   // Updater state
   const [isUpdating, setIsUpdating] = useState(false);
@@ -24,6 +25,7 @@ export default function Home() {
     setIsLoading(true);
     setError('');
     setResults(null);
+    setScanLogs([]);
 
     try {
       const response = await fetch('/api/scan', {
@@ -33,13 +35,42 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to perform scan');
+        throw new Error(`Error: ${response.statusText}`);
       }
-
-      const data = await response.json();
-      setResults(data);
+      
+      if (!response.body) throw new Error("ReadableStream not supported.");
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+        
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            if (data.type === 'log') {
+              setScanLogs(prev => [...prev, data.message]);
+            } else if (data.type === 'result') {
+              setResults(data.data);
+            } else if (data.type === 'error') {
+              setError(data.message);
+            }
+          } catch (e) {
+            console.error('Failed to parse line:', line);
+          }
+        }
+      }
+      
     } catch (err: any) {
-      setError(err.message || 'An error occurred during scanning');
+      setError(err.message || 'An error occurred during the scan.');
     } finally {
       setIsLoading(false);
     }
@@ -131,9 +162,39 @@ export default function Home() {
         </button>
       </form>
 
+      {/* Terminal Output */}
+      {(isLoading || scanLogs.length > 0) && !results && (
+        <div className="terminal-window fade-in" style={{ marginBottom: '2rem' }}>
+          <div className="terminal-header">
+            <span className="dot" style={{ background: '#ef4444' }}></span>
+            <span className="dot" style={{ background: '#f59e0b' }}></span>
+            <span className="dot" style={{ background: '#10b981' }}></span>
+            <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: '#94a3b8' }}>nuclei-engine</span>
+          </div>
+          <div className="terminal-body" style={{ display: 'flex', flexDirection: 'column' }}>
+            {scanLogs.map((log, index) => {
+              // Colorize common nuclei tags
+              let logColor = '#e2e8f0';
+              if (log.includes('[INF]')) logColor = '#60a5fa'; // Blue
+              if (log.includes('[WRN]')) logColor = '#f59e0b'; // Amber
+              if (log.includes('[ERR]')) logColor = '#ef4444'; // Red
+              if (log.includes('[ALARM]')) logColor = '#ef4444'; // Red
+              if (log.includes('[*]') || log.includes('[+]')) logColor = '#10b981'; // Green
+              
+              return (
+                <span key={index} style={{ color: logColor }}>{log}</span>
+              );
+            })}
+            {isLoading && (
+              <span className="cursor-blink" style={{ color: '#10b981', marginTop: '4px' }}>_</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {error && (
-        <div className="error-message slide-up">
-          {error}
+        <div className="error-message fade-in">
+          <strong>Scan Failed:</strong> {error}
         </div>
       )}
 

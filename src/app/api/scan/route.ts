@@ -48,82 +48,137 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Target is required' }, { status: 400 });
     }
 
-    // Clean target (remove http:// or https:// if provided)
     const protocol = target.startsWith('http://') ? 'http://' : 'https://';
     const host = target.replace(/^(https?:\/\/)/, '').replace(/\/$/, '');
 
-    // Paths to check
-    const gpUrl = `${protocol}${host}/global-protect/login.esp`;
-    const mgmtUrl = `${protocol}${host}/php/login.php`;
-    const rootUrl = `${protocol}${host}/`;
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendJSON = (obj: any) => {
+          try {
+            controller.enqueue(encoder.encode(JSON.stringify(obj) + '\n'));
+          } catch (e) {
+            // Stream might be closed
+          }
+        };
 
-    // Perform checks concurrently
-    const [gpRes, mgmtRes, rootRes] = await Promise.all([
-      checkEndpoint(gpUrl),
-      checkEndpoint(mgmtUrl),
-      checkEndpoint(rootUrl)
-    ]);
+        try {
+          sendJSON({ type: 'log', message: `[*] Initializing passive reconnaissance against ${host}...` });
 
-    const isReachable = gpRes.status > 0 || mgmtRes.status > 0 || rootRes.status > 0;
-    
-    let hasGlobalProtect = false;
-    let hasManagement = false;
+          const gpUrl = `${protocol}${host}/global-protect/login.esp`;
+          const mgmtUrl = `${protocol}${host}/php/login.php`;
+          const rootUrl = `${protocol}${host}/`;
 
-    // Strict Fingerprinting for GlobalProtect
-    const gpBody = gpRes.body.toLowerCase();
-    if (gpRes.status === 200 && (gpBody.includes('<title>globalprotect portal</title>') || gpBody.includes('var loginuser =') || gpBody.includes('/global-protect/login.esp'))) {
-      hasGlobalProtect = true;
-    } else if (rootRes.status === 200 && rootRes.body.toLowerCase().includes('<title>globalprotect portal</title>')) {
-      hasGlobalProtect = true;
-    }
+          const [gpRes, mgmtRes, rootRes] = await Promise.all([
+            checkEndpoint(gpUrl),
+            checkEndpoint(mgmtUrl),
+            checkEndpoint(rootUrl)
+          ]);
 
-    // Strict Fingerprinting for Management Interface
-    const mgmtBody = mgmtRes.body.toLowerCase();
-    if (mgmtRes.status === 200 && (mgmtBody.includes('<title>palo alto networks - pan-os</title>') || mgmtBody.includes('/php/login.php'))) {
-      hasManagement = true;
-    } else if (rootRes.status === 200 || rootRes.status === 301 || rootRes.status === 302) {
-      if (rootRes.body.toLowerCase().includes('<title>palo alto networks - pan-os</title>')) {
-        hasManagement = true;
-      }
-      const location = rootRes.headers['location'];
-      if (location && location.includes('/php/login.php')) {
-        hasManagement = true;
-      }
-    }
+          const isReachable = gpRes.status > 0 || mgmtRes.status > 0 || rootRes.status > 0;
+          let hasGlobalProtect = false;
+          let hasManagement = false;
 
-    const exposedInterfaces: string[] = [];
-    if (hasGlobalProtect) exposedInterfaces.push('GlobalProtect');
-    if (hasManagement) exposedInterfaces.push('Management');
+          const gpBody = gpRes.body.toLowerCase();
+          if (gpRes.status === 200 && (gpBody.includes('<title>globalprotect portal</title>') || gpBody.includes('var loginuser =') || gpBody.includes('/global-protect/login.esp'))) {
+            hasGlobalProtect = true;
+          } else if (rootRes.status === 200 && rootRes.body.toLowerCase().includes('<title>globalprotect portal</title>')) {
+            hasGlobalProtect = true;
+          }
 
-    // Active Exploitation (if enabled)
-    let confirmedCVEs: string[] = [];
-    if (activeScan) {
-      console.log(`Running active Nuclei scan against ${host}...`);
-      try {
-        const { stdout } = await execPromise(`nuclei -u ${protocol}${host} -tags paloalto,panos -jsonl -silent`);
-        const lines = stdout.split('\n').filter(line => line.trim() !== '');
-        for (const line of lines) {
-          const result = JSON.parse(line);
-          if (result && result['template-id']) {
-            const match = result['template-id'].match(/(CVE-\d{4}-\d{4,5})/i);
-            if (match) {
-              confirmedCVEs.push(match[1].toUpperCase());
+          const mgmtBody = mgmtRes.body.toLowerCase();
+          if (mgmtRes.status === 200 && (mgmtBody.includes('<title>palo alto networks - pan-os</title>') || mgmtBody.includes('/php/login.php'))) {
+            hasManagement = true;
+          } else if (rootRes.status === 200 || rootRes.status === 301 || rootRes.status === 302) {
+            if (rootRes.body.toLowerCase().includes('<title>palo alto networks - pan-os</title>')) {
+              hasManagement = true;
+            }
+            const location = rootRes.headers['location'];
+            if (location && location.includes('/php/login.php')) {
+              hasManagement = true;
             }
           }
-        }
-      } catch (err) {
-        console.error('Nuclei scan failed or returned no results:', err);
-      }
-    }
 
-    return NextResponse.json({
-      target: host,
-      isReachable,
-      hasGlobalProtect,
-      hasManagement,
-      exposedInterfaces,
-      confirmedCVEs,
-      timestamp: new Date().toISOString()
+          const exposedInterfaces: string[] = [];
+          if (hasGlobalProtect) exposedInterfaces.push('GlobalProtect');
+          if (hasManagement) exposedInterfaces.push('Management');
+
+          sendJSON({ type: 'log', message: `[+] Passive scan complete. Found: ${exposedInterfaces.join(', ') || 'None'}` });
+
+          let confirmedCVEs: string[] = [];
+          
+          if (activeScan) {
+            sendJSON({ type: 'log', message: '[*] Initializing ProjectDiscovery Nuclei Engine...' });
+            await new Promise<void>((resolve) => {
+               // Use spawn directly instead of execPromise for streaming stdout/stderr
+               const { spawn } = require('child_process');
+               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl', '-v']);
+               
+               nuclei.stdout.on('data', (data: Buffer) => {
+                 const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
+                 for (const line of lines) {
+                   try {
+                     const result = JSON.parse(line);
+                     if (result['template-id']) {
+                       const match = result['template-id'].match(/(CVE-\d{4}-\d{4,5})/i);
+                       if (match) {
+                          const cve = match[1].toUpperCase();
+                          confirmedCVEs.push(cve);
+                          sendJSON({ type: 'log', message: `[ALARM] Nuclei successfully exploited ${cve}!` });
+                       }
+                     }
+                   } catch(e) {
+                     sendJSON({ type: 'log', message: line });
+                   }
+                 }
+               });
+               
+               nuclei.stderr.on('data', (data: Buffer) => {
+                  const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
+                  for (const line of lines) {
+                    const cleanLine = line.replace(/\x1B\[\d+m/g, ''); // strip ansi
+                    sendJSON({ type: 'log', message: cleanLine });
+                  }
+               });
+               
+               nuclei.on('close', () => {
+                  sendJSON({ type: 'log', message: '[+] Nuclei engine finished.' });
+                  resolve();
+               });
+               
+               nuclei.on('error', (err: any) => {
+                  sendJSON({ type: 'log', message: `[-] Nuclei failed to start: ${err.message}` });
+                  resolve();
+               });
+            });
+          }
+
+          sendJSON({
+            type: 'result',
+            data: {
+              target: host,
+              isReachable,
+              hasGlobalProtect,
+              hasManagement,
+              exposedInterfaces,
+              confirmedCVEs,
+              timestamp: new Date().toISOString()
+            }
+          });
+          controller.close();
+        } catch (e: any) {
+          sendJSON({ type: 'error', message: e.message });
+          controller.close();
+        }
+      }
+    });
+
+    return new Response(stream, { 
+      headers: { 
+        'Content-Type': 'application/x-ndjson', 
+        'Cache-Control': 'no-cache', 
+        'Connection': 'keep-alive' 
+      } 
     });
   } catch (error) {
     console.error('Scan Error:', error);
