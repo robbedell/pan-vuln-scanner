@@ -9,9 +9,10 @@ interface ResultsProps {
     hasManagement: boolean;
     exposedInterfaces: string[];
   };
+  targetVersion?: string;
 }
 
-export default function ResultsDashboard({ results }: ResultsProps) {
+export default function ResultsDashboard({ results, targetVersion }: ResultsProps) {
   const isExposed = (vuln: Vulnerability) => {
     if (vuln.triggerInterface === 'GlobalProtect') return results.hasGlobalProtect;
     if (vuln.triggerInterface === 'Management') return results.hasManagement;
@@ -69,6 +70,7 @@ export default function ResultsDashboard({ results }: ResultsProps) {
                 key={vuln.id} 
                 vulnerability={vuln} 
                 isExposed={isExposed(vuln)} 
+                targetVersion={targetVersion}
               />
             ))}
           </div>
