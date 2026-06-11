@@ -266,7 +266,7 @@ export default function Home() {
       </form>
 
       {/* Terminal Output */}
-      {(isLoading || scanLogs.length > 0) && !results && (
+      {(isLoading || scanLogs.length > 0) && (
         <div className="terminal-window fade-in" style={{ marginBottom: '2rem' }}>
           <div className="terminal-header">
             <span className="dot" style={{ background: '#ef4444' }}></span>
