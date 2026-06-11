@@ -8,6 +8,7 @@ interface ResultsProps {
     hasGlobalProtect: boolean;
     hasManagement: boolean;
     exposedInterfaces: string[];
+    confirmedCVEs?: string[];
   };
   targetVersion?: string;
 }
@@ -71,6 +72,7 @@ export default function ResultsDashboard({ results, targetVersion }: ResultsProp
                 vulnerability={vuln} 
                 isExposed={isExposed(vuln)} 
                 targetVersion={targetVersion}
+                isConfirmed={results.confirmedCVEs?.includes(vuln.id)}
               />
             ))}
           </div>

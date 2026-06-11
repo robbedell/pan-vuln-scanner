@@ -14,6 +14,9 @@ export default function Home() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState('');
 
+  // Active Scan State
+  const [activeScan, setActiveScan] = useState(false);
+
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!target.trim()) return;
@@ -26,7 +29,7 @@ export default function Home() {
       const response = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target }),
+        body: JSON.stringify({ target, activeScan }),
       });
 
       if (!response.ok) {
@@ -108,6 +111,21 @@ export default function Home() {
             style={{ flex: 1 }}
           />
         </div>
+
+        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+          <input 
+            type="checkbox" 
+            id="activeScanToggle" 
+            checked={activeScan}
+            onChange={(e) => setActiveScan(e.target.checked)}
+            disabled={isLoading}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <label htmlFor="activeScanToggle" style={{ color: '#fca5a5', fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none' }}>
+            <strong>Enable Active Exploitation (Nuclei)</strong> — Sends active payloads to definitively confirm vulnerabilities. Use ONLY with authorization.
+          </label>
+        </div>
+
         <button type="submit" className="btn" disabled={isLoading || !target.trim()} style={{ marginTop: '1rem' }}>
           {isLoading ? <div className="loader"></div> : 'Scan Target'}
         </button>
