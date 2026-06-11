@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { cveDatabase, Vulnerability } from '@/lib/vulnerabilities';
 import { generateJSONReport } from '@/lib/reportGenerator';
 import VulnerabilityCard from './VulnerabilityCard';
+import DashboardSummary from './DashboardSummary';
 
 interface ResultsProps {
   results: {
@@ -179,6 +180,14 @@ Be highly professional, detailed, and use Markdown tables and code blocks where 
               ? 'We did not detect exposed GlobalProtect or Management interfaces that match known critical CVEs from 2024/2025/2026. However, always ensure your firmware is fully patched and follow best practices.'
               : 'The target exposes interfaces that are known to be vulnerable to the following CVEs unless patched.'}
           </p>
+
+          <DashboardSummary 
+            results={results} 
+            exposedCount={exposedCount} 
+            targetVersion={targetVersion} 
+            aiConfig={aiConfig} 
+          />
+
           <div className="vuln-list">
             {cveDatabase.map(vuln => (
               <VulnerabilityCard 
