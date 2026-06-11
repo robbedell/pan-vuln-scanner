@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ResultsDashboard from '@/components/ResultsDashboard';
 
 export default function Home() {
@@ -18,6 +18,25 @@ export default function Home() {
   // Active Scan State
   const [activeScan, setActiveScan] = useState(false);
 
+  // AI Settings State
+  const [showSettings, setShowSettings] = useState(false);
+  const [aiBaseUrl, setAiBaseUrl] = useState('http://localhost:11434/v1');
+  const [aiModel, setAiModel] = useState('llama3');
+  const [aiApiKey, setAiApiKey] = useState('sk-local');
+
+  useEffect(() => {
+    setAiBaseUrl(localStorage.getItem('aiBaseUrl') || 'http://localhost:11434/v1');
+    setAiModel(localStorage.getItem('aiModel') || 'llama3');
+    setAiApiKey(localStorage.getItem('aiApiKey') || 'sk-local');
+  }, []);
+
+  const saveAISettings = () => {
+    localStorage.setItem('aiBaseUrl', aiBaseUrl);
+    localStorage.setItem('aiModel', aiModel);
+    localStorage.setItem('aiApiKey', aiApiKey);
+    setShowSettings(false);
+  };
+
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!target.trim()) return;
@@ -31,7 +50,11 @@ export default function Home() {
       const response = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target, activeScan }),
+        body: JSON.stringify({ 
+          target, 
+          activeScan, 
+          aiConfig: { aiBaseUrl, aiModel, aiApiKey } 
+        }),
       });
 
       if (!response.ok) {
@@ -105,15 +128,51 @@ export default function Home() {
           <h1>PAN-OS Vulnerability Scanner</h1>
           <p>Analyze exposed Palo Alto Networks firewalls for critical vulnerabilities reported in 2024, 2025, and 2026.</p>
         </div>
-        <button 
-          onClick={handleUpdate} 
-          disabled={isUpdating}
-          className="btn" 
-          style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-        >
-          {isUpdating ? 'Updating...' : '🔄 Update App'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={() => setShowSettings(true)} 
+            className="btn" 
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+          >
+            ⚙️ AI Settings
+          </button>
+          <button 
+            onClick={handleUpdate} 
+            disabled={isUpdating}
+            className="btn" 
+            style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+          >
+            {isUpdating ? 'Updating...' : '🔄 Update App'}
+          </button>
+        </div>
       </div>
+
+      {showSettings && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="glass fade-in" style={{ padding: '2rem', width: '90%', maxWidth: '500px', borderRadius: '12px' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#fff' }}>🤖 Local AI Settings</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              Configure your local Open WebUI or Ollama instance to power the AI Assistant and Executive Summary generators.
+            </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>API Base URL (OpenAI Compatible)</label>
+              <input type="text" className="search-input" value={aiBaseUrl} onChange={e => setAiBaseUrl(e.target.value)} style={{ width: '100%' }} />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>Model Name</label>
+              <input type="text" className="search-input" value={aiModel} onChange={e => setAiModel(e.target.value)} style={{ width: '100%' }} />
+            </div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>API Key (Optional for Local)</label>
+              <input type="password" className="search-input" value={aiApiKey} onChange={e => setAiApiKey(e.target.value)} style={{ width: '100%' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowSettings(false)} className="btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}>Cancel</button>
+              <button onClick={saveAISettings} className="btn" style={{ background: 'var(--accent-color)', color: '#000' }}>Save Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {updateMessage && (
         <div className="slide-up" style={{ background: 'var(--accent-color)', color: '#000', padding: '1rem', borderRadius: '12px', marginBottom: '2rem', textAlign: 'center', fontWeight: 'bold' }}>
@@ -200,7 +259,11 @@ export default function Home() {
 
       {results && (
         <div className="fade-in">
-          <ResultsDashboard results={results} targetVersion={targetVersion} />
+          <ResultsDashboard 
+            results={results} 
+            targetVersion={targetVersion} 
+            aiConfig={{ aiBaseUrl, aiModel, aiApiKey }} 
+          />
         </div>
       )}
 

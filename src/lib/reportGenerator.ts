@@ -64,13 +64,17 @@ export function generateJSONReport(results: ScanResults, targetVersion: string |
   downloadFile(JSON.stringify(report, null, 2), filename, 'application/json');
 }
 
-export function generateMarkdownReport(results: ScanResults, targetVersion: string | undefined, cveDatabase: Vulnerability[]) {
+export function generateMarkdownReport(results: ScanResults, targetVersion: string | undefined, cveDatabase: Vulnerability[], executiveSummary?: string) {
   const dateStr = new Date().toLocaleString();
   
   let md = `# PAN-OS Vulnerability Scan Report\n\n`;
   md += `**Target:** \`${results.target}\`\n`;
   md += `**Date Scanned:** ${dateStr}\n`;
   md += `**Provided Firmware Version:** ${targetVersion || '*Unknown*'}\n\n`;
+  
+  if (executiveSummary) {
+    md += `## 🤖 AI Executive Summary\n${executiveSummary}\n\n`;
+  }
   
   md += `## 🌐 Exposure Summary\n`;
   md += `- **GlobalProtect Portal/Gateway:** ${results.hasGlobalProtect ? '⚠️ EXPOSED' : '✅ SECURE'}\n`;

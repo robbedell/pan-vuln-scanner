@@ -42,7 +42,7 @@ function checkEndpoint(url: string): Promise<{ status: number, body: string, hea
 
 export async function POST(req: Request) {
   try {
-    const { target, activeScan } = await req.json();
+    const { target, activeScan, aiConfig } = await req.json();
 
     if (!target) {
       return NextResponse.json({ error: 'Target is required' }, { status: 400 });
@@ -125,6 +125,32 @@ export async function POST(req: Request) {
                           const cve = match[1].toUpperCase();
                           confirmedCVEs.push(cve);
                           sendJSON({ type: 'log', message: `[ALARM] Nuclei successfully exploited ${cve}!` });
+                          
+                          if (result['extracted-results'] && aiConfig?.aiBaseUrl) {
+                            const extractedStr = result['extracted-results'].join('\\n');
+                            sendJSON({ type: 'log', message: `[🤖 AI] Analyzing extracted data payload...` });
+                            
+                            // Fire & forget AI analysis so we don't block the stream loop heavily, 
+                            // but we are inside an async callback so we can just await it.
+                            (async () => {
+                              try {
+                                const { OpenAI } = require('openai');
+                                const openai = new OpenAI({ baseURL: aiConfig.aiBaseUrl, apiKey: aiConfig.aiApiKey || 'sk-local' });
+                                
+                                const prompt = `Analyze this data extracted from a successful exploit against a Palo Alto firewall. Keep it extremely brief (1-2 sentences). What did this payload achieve (e.g. Config dump, /etc/passwd leak, routing table)? \\n\\nData:\\n${extractedStr}`;
+                                
+                                const aiRes = await openai.chat.completions.create({
+                                  model: aiConfig.aiModel,
+                                  messages: [{ role: 'user', content: prompt }],
+                                  temperature: 0.1,
+                                });
+                                
+                                sendJSON({ type: 'log', message: `[🤖 AI ANALYSIS] ${aiRes.choices[0].message.content}` });
+                              } catch (aiErr: any) {
+                                sendJSON({ type: 'log', message: `[🤖 AI ERROR] Analysis failed: ${aiErr.message}` });
+                              }
+                            })();
+                          }
                        }
                      }
                    } catch(e) {

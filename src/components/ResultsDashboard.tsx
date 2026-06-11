@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { cveDatabase, Vulnerability } from '@/lib/vulnerabilities';
 import { generateJSONReport, generateMarkdownReport } from '@/lib/reportGenerator';
 import VulnerabilityCard from './VulnerabilityCard';
@@ -12,9 +13,15 @@ interface ResultsProps {
     confirmedCVEs?: string[];
   };
   targetVersion?: string;
+  aiConfig?: {
+    aiBaseUrl: string;
+    aiModel: string;
+    aiApiKey: string;
+  };
 }
 
-export default function ResultsDashboard({ results, targetVersion }: ResultsProps) {
+export default function ResultsDashboard({ results, targetVersion, aiConfig }: ResultsProps) {
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const isExposed = (vuln: Vulnerability) => {
     if (vuln.triggerInterface === 'GlobalProtect') return results.hasGlobalProtect;
     if (vuln.triggerInterface === 'Management') return results.hasManagement;
@@ -23,6 +30,42 @@ export default function ResultsDashboard({ results, targetVersion }: ResultsProp
   };
 
   const exposedCount = cveDatabase.filter(isExposed).length;
+
+  const handleGenerateMarkdown = async () => {
+    let summary = '';
+    
+    if (aiConfig && aiConfig.aiBaseUrl) {
+      setIsGeneratingSummary(true);
+      try {
+        const prompt = `Write a 2-paragraph Executive Summary for a vulnerability scan against ${results.target}. 
+The target has the following exposed interfaces: ${results.exposedInterfaces.join(', ') || 'None'}.
+Confirmed CVEs (Exploited): ${results.confirmedCVEs?.join(', ') || 'None'}.
+Make it sound professional, emphasizing business risk. Do not use formatting like bold/italics excessively, keep it clean. Do not include any introduction like "Here is the summary".`;
+
+        const res = await fetch('/api/ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            baseURL: aiConfig.aiBaseUrl,
+            model: aiConfig.aiModel,
+            apiKey: aiConfig.aiApiKey,
+            disableStream: true
+          })
+        });
+        
+        const data = await res.json();
+        if (data.content) {
+          summary = data.content;
+        }
+      } catch (err) {
+        console.error('AI Summary failed', err);
+      }
+      setIsGeneratingSummary(false);
+    }
+    
+    generateMarkdownReport(results, targetVersion, cveDatabase, summary);
+  };
 
   return (
     <div>
@@ -56,11 +99,12 @@ export default function ResultsDashboard({ results, targetVersion }: ResultsProp
 
       <div className="slide-up" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '2rem', animationDelay: '0.1s' }}>
         <button 
-          onClick={() => generateMarkdownReport(results, targetVersion, cveDatabase)}
+          onClick={handleGenerateMarkdown}
+          disabled={isGeneratingSummary}
           className="btn" 
           style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
         >
-          📥 Download Markdown Report
+          {isGeneratingSummary ? '🤖 Writing AI Summary...' : '📥 Download Markdown Report'}
         </button>
         <button 
           onClick={() => generateJSONReport(results, targetVersion, cveDatabase)}
@@ -91,6 +135,7 @@ export default function ResultsDashboard({ results, targetVersion }: ResultsProp
                 isExposed={isExposed(vuln)} 
                 targetVersion={targetVersion}
                 isConfirmed={results.confirmedCVEs?.includes(vuln.id)}
+                aiConfig={aiConfig}
               />
             ))}
           </div>
