@@ -93,7 +93,7 @@ Be highly professional, detailed, and use Markdown tables and code blocks where 
           if (element) {
             // Dynamically import html2pdf
             const html2pdf = (await import('html2pdf.js')).default;
-            const opt = {
+            const opt: any = {
               margin:       0.5,
               filename:     `Vulnerability_Report_${results.target}.pdf`,
               image:        { type: 'jpeg', quality: 0.98 },
