@@ -18,7 +18,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2024,
     whyItsVulnerable: 'A critical vulnerability exists in the GlobalProtect feature of PAN-OS that allows an unauthenticated attacker to execute arbitrary OS commands with root privileges. This is due to improper sanitization of session data and arbitrary file creation capabilities on the appliance.',
     howToFix: 'Immediately apply the latest security hotfixes for your specific PAN-OS version. Ensure that vulnerability protection profiles are applied to GlobalProtect interfaces. Temporary mitigations involving disabling telemetry have been proven insufficient, so patching is the only complete fix.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1'
+    affectedVersions: 'PAN-OS < 11.1.2-h3, < 11.0.4-h1, < 10.2.9-h1'
   },
   {
     id: 'CVE-2025-0108',
@@ -28,7 +28,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2025,
     whyItsVulnerable: 'An unauthenticated attacker with network access to the PAN-OS management web interface can bypass authentication checks and invoke specific internal PHP scripts. This occurs because the application fails to adequately restrict access to internal API endpoints.',
     howToFix: 'The most critical remediation is to ensure the Management Web Interface is NEVER exposed to the public internet. Restrict access strictly to trusted internal IP addresses using management interface ACLs. Apply the latest PAN-OS patches that resolve this vulnerability.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.4-h4, < 11.1.6-h1, < 10.2.13-h3, < 10.1.14-h9'
   },
   {
     id: 'CVE-2024-9474',
@@ -38,7 +38,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2024,
     whyItsVulnerable: 'A vulnerability in the PAN-OS management web interface allows an attacker to elevate their privileges and perform actions on the firewall. This is frequently chained with Authentication Bypass vulnerabilities (like CVE-2025-0108) to completely compromise the firewall from the outside.',
     howToFix: 'Restrict access to the Management interface to internal networks only. Patch the firewall to the latest version. Monitor system logs for unexpected configuration changes or administrative logins.',
-    affectedVersions: 'PAN-OS 10.1, 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.4-h1, < 11.1.5-h1, < 11.0.6-h1, < 10.2.12-h2, < 10.1.14-h6'
   },
   {
     id: 'CVE-2025-0111',
@@ -48,7 +48,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2025,
     whyItsVulnerable: 'This vulnerability allows an attacker to read sensitive files from the filesystem of the firewall that are accessible by the "nobody" user. While initially requiring authentication, it becomes highly critical when chained with an authentication bypass (like CVE-2025-0108).',
     howToFix: 'Block public internet access to the Management Web Interface. Restrict management access to trusted IP ranges. Apply the PAN-OS security patch that addresses this file read vulnerability.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.4-h4, < 11.1.6-h1, < 10.2.13-h3, < 10.1.14-h9'
   },
   {
     id: 'CVE-2026-0257',
@@ -58,7 +58,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2026,
     whyItsVulnerable: 'A critical authentication bypass vulnerability allows unauthenticated attackers to access the portal and gateway components of PAN-OS without supplying valid credentials. This flaw is actively exploited in the wild and can lead to initial network access.',
     howToFix: 'Immediately update your PAN-OS software to the latest release mitigating CVE-2026-0257. If patching is not immediately possible, restrict access to the portal and gateway to known and trusted IP addresses only.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.6-h1, < 11.1.8-h2, < 10.2.15-h1'
   },
   {
     id: 'CVE-2026-0273',
@@ -68,7 +68,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2026,
     whyItsVulnerable: 'An authenticated administrator command injection vulnerability exists in the PAN-OS Management Web UI and CLI. It allows an attacker who already has administrative privileges to bypass system restrictions and execute arbitrary commands as the root user on the underlying OS.',
     howToFix: 'Ensure the Management Web Interface is completely isolated from the internet. Enforce strict role-based access control (RBAC) and audit administrator activity. Apply the security patch provided by Palo Alto Networks.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.6-h1, < 11.1.8-h2, < 10.2.15-h1'
   },
   {
     id: 'CVE-2026-0300',
@@ -78,7 +78,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2026,
     whyItsVulnerable: 'A buffer overflow vulnerability exists in the User-ID Authentication Portal (Captive Portal) service. This allows an unauthenticated attacker to execute arbitrary code with root privileges by sending specially crafted input.',
     howToFix: 'If Captive Portal is not required, disable it immediately. Ensure all Management and Portal interfaces are restricted from public internet access. Apply the latest PAN-OS patch.',
-    affectedVersions: 'PAN-OS 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.6-h2, < 11.1.9-h1'
   },
   {
     id: 'CVE-2026-0263',
@@ -88,7 +88,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2026,
     whyItsVulnerable: 'A buffer overflow vulnerability in the Internet Key Exchange version 2 (IKEv2) processing component allows unauthenticated attackers to execute arbitrary code or cause a Denial of Service condition on the firewall.',
     howToFix: 'Apply the vendor patch. If patching is not possible and IPSec VPNs are not actively used, disable IKEv2 processing on external interfaces.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.6-h1, < 11.1.8-h2, < 10.2.15-h1'
   },
   {
     id: 'CVE-2026-0262',
@@ -98,7 +98,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2026,
     whyItsVulnerable: 'A denial of service (DoS) vulnerability in PAN-OS allows unauthenticated attackers to crash critical services and disrupt network traffic by sending crafted malicious packets to external-facing interfaces.',
     howToFix: 'Apply the latest security updates. Implement robust DoS protection profiles and restrict exposed services using strict firewall rules.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.6-h1, < 11.1.8-h2, < 10.2.15-h1'
   },
   {
     id: 'CVE-2024-0012',
@@ -108,7 +108,7 @@ export const cveDatabase: Vulnerability[] = [
     year: 2024,
     whyItsVulnerable: 'An authentication bypass vulnerability in the PAN-OS management web interface allows an unauthenticated attacker with network access to the management interface to gain administrator privileges.',
     howToFix: 'Ensure that the management web interface is only accessible from trusted internal IP addresses and never exposed to the public internet. Apply the relevant PAN-OS security patch.',
-    affectedVersions: 'PAN-OS 10.2, 11.0, 11.1, 11.2'
+    affectedVersions: 'PAN-OS < 11.2.4-h1, < 11.1.5-h1, < 11.0.6-h1, < 10.2.12-h2'
   },
   {
     id: 'CVE-2024-9468',
@@ -118,6 +118,6 @@ export const cveDatabase: Vulnerability[] = [
     year: 2024,
     whyItsVulnerable: 'A memory corruption vulnerability allows an unauthenticated attacker to cause a Denial of Service (DoS) condition on the firewall by sending a maliciously crafted packet to a configured interface.',
     howToFix: 'Apply the latest PAN-OS updates. As a temporary mitigation, ensure vulnerability protection profiles are applied to all untrusted interfaces.',
-    affectedVersions: 'PAN-OS 10.1, 10.2, 11.0, 11.1'
+    affectedVersions: 'PAN-OS < 11.1.4-h1, < 11.0.5-h2, < 10.2.11-h1'
   }
 ];
