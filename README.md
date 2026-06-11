@@ -1,16 +1,22 @@
 # PAN-OS Vulnerability Scanner
 
-A fast, Next.js-based web application that performs both **passive external reconnaissance** and **active exploitation** against Palo Alto Networks firewalls. It identifies exposed GlobalProtect and Management interfaces and maps them against critical recent CVEs (2024–2026), with the option to fire active payloads for definitive exploit confirmation.
+A fast, Next.js-based web application that performs both **passive external reconnaissance** and **active exploitation** against Palo Alto Networks firewalls. It integrates directly with **local AI models** (like Ollama and Open WebUI) to analyze active exploit payloads, generate custom CLI mitigation scripts, and auto-generate comprehensive Penetration Testing PDF reports.
 
-## Features
+## Core Features
 
-- **Passive Reconnaissance**: Identifies exposed interfaces safely without executing disruptive exploit payloads, preventing false positives through strict HTML structure fingerprinting.
+- **Passive Reconnaissance**: Identifies exposed GlobalProtect and Management interfaces safely without executing disruptive exploit payloads.
 - **Active Exploitation Engine (Nuclei)**: Optionally execute active exploit payloads using ProjectDiscovery's Nuclei engine to definitively confirm vulnerabilities.
 - **Live Terminal Streaming**: Watch the backend Nuclei engine execute templates in real-time through a beautifully styled, colorized NDJSON-streamed console directly in the UI.
-- **Version Awareness**: Specify the target's PAN-OS version to receive dynamic vulnerability assessments (e.g., "Not Exposed, but Firmware Vulnerable").
-- **Technical Breakdowns & Lab Setups**: Every CVE card expands to reveal deep technical explanations of the root cause, and step-by-step instructions on how to configure a vulnerable lab device for testing.
 - **In-App Updater**: Deploy the latest CVE database additions and scanner code directly from GitHub with a single click in the UI.
-- **Premium UI**: Modern, glassmorphism-inspired interface with dynamic animations and color-coded status badges.
+- **Premium UI**: Modern, glassmorphism-inspired interface with dynamic animations, responsive flex layouts, and color-coded status badges.
+
+## AI Integration Engine 🤖
+
+The scanner acts as an intelligent proxy, bypassing CORS to securely route requests to your local AI endpoints (`http://localhost:11434` or `http://localhost:3000`).
+
+- **Ask AI Analyst**: Inside any identified vulnerability card, click "Ask AI Analyst" to inject the CVE's root cause and your target's firmware version into your local AI, which will generate exact, firmware-specific PAN-OS CLI mitigation scripts.
+- **Smart Payload Analysis**: During an active scan, if an exploit extracts sensitive data (like `/etc/passwd` or configs), the AI instantly analyzes the raw data in the background and prints its assessment directly into the live terminal window!
+- **AI-Powered Penetration Reports (PDF)**: Ditch static markdown. The scanner feeds your entire scan context (interfaces, exploits, CVE data) into the AI, prompting it to act as a Senior Security Engineer. The frontend then seamlessly renders the massive markdown response and uses `html2pdf.js` to convert it into a beautifully styled, professional "light-mode" PDF for instant download.
 
 ## Getting Started (Local Development)
 
@@ -18,6 +24,7 @@ A fast, Next.js-based web application that performs both **passive external reco
 - **Node.js** (v18 or higher recommended)
 - **Git** (Required for the In-App Updater to function)
 - **Nuclei** (Required *only* if you intend to use the Active Exploitation feature locally). You can install it on macOS via `brew install nuclei`.
+- **Local AI** (Optional): Ollama or Open WebUI running locally if you wish to use the AI features.
 
 ### Installation & Run
 
@@ -27,7 +34,7 @@ A fast, Next.js-based web application that performs both **passive external reco
    cd pan-vuln-scanner
    ```
 
-2. Install the necessary dependencies:
+2. Install the core dependencies (including `html2pdf.js`, `react-markdown`, and `remark-gfm` for AI rendering):
    ```bash
    npm install
    ```
@@ -38,6 +45,8 @@ A fast, Next.js-based web application that performs both **passive external reco
    ```
 
 4. Open your browser and navigate to [http://localhost:9999](http://localhost:9999).
+
+5. **Configure AI:** Click the ⚙️ icon in the top right corner. Enter your local API base URL (e.g. `http://localhost:3000/api` or `http://localhost:11434/v1`), your model name, and your API Key (for Open WebUI, you can extract the `token` from your browser's Local Storage if you lack admin privileges to generate one). Hit **Test Connection**.
 
 ## Running via Docker (Production)
 
