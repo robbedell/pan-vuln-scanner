@@ -387,3 +387,35 @@ h1, h2, h3, h4, h5, h6 {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* React Markdown Styles */
+.ai-markdown-container h1, .ai-markdown-container h2, .ai-markdown-container h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+.ai-markdown-container p {
+  margin-bottom: 1rem;
+}
+.ai-markdown-container ul, .ai-markdown-container ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.ai-markdown-container code {
+  background: rgba(0,0,0,0.3);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+.ai-markdown-container pre {
+  background: rgba(0,0,0,0.5);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.ai-markdown-container pre code {
+  background: transparent;
+  padding: 0;
+}
