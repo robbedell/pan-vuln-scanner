@@ -23,6 +23,7 @@ export default function Home() {
   const [aiBaseUrl, setAiBaseUrl] = useState('http://localhost:11434/v1');
   const [aiModel, setAiModel] = useState('llama3');
   const [aiApiKey, setAiApiKey] = useState('sk-local');
+  const [testStatus, setTestStatus] = useState<{status: 'idle' | 'testing' | 'success' | 'error', message: string}>({status: 'idle', message: ''});
 
   useEffect(() => {
     setAiBaseUrl(localStorage.getItem('aiBaseUrl') || 'http://localhost:11434/v1');
@@ -35,6 +36,31 @@ export default function Home() {
     localStorage.setItem('aiModel', aiModel);
     localStorage.setItem('aiApiKey', aiApiKey);
     setShowSettings(false);
+    setTestStatus({status: 'idle', message: ''});
+  };
+
+  const handleTestConnection = async () => {
+    setTestStatus({status: 'testing', message: 'Testing connection...'});
+    try {
+      const response = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: 'Respond with exactly one word: SUCCESS',
+          baseURL: aiBaseUrl,
+          model: aiModel,
+          apiKey: aiApiKey,
+          disableStream: true
+        })
+      });
+      
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      
+      setTestStatus({status: 'success', message: 'Connection successful!'});
+    } catch (err: any) {
+      setTestStatus({status: 'error', message: `Connection failed: ${err.message}`});
+    }
   };
 
   const handleScan = async (e: React.FormEvent) => {
@@ -166,7 +192,25 @@ export default function Home() {
               <label style={{ display: 'block', marginBottom: '0.5rem', color: '#94a3b8' }}>API Key (Optional for Local)</label>
               <input type="password" className="search-input" value={aiApiKey} onChange={e => setAiApiKey(e.target.value)} style={{ width: '100%' }} />
             </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            
+            {testStatus.status !== 'idle' && (
+              <div style={{ 
+                marginBottom: '1rem', 
+                padding: '0.75rem', 
+                borderRadius: '8px', 
+                fontSize: '0.9rem',
+                background: testStatus.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : testStatus.status === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                color: testStatus.status === 'success' ? '#10b981' : testStatus.status === 'error' ? '#ef4444' : '#60a5fa',
+                border: `1px solid ${testStatus.status === 'success' ? 'rgba(16, 185, 129, 0.3)' : testStatus.status === 'error' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`
+              }}>
+                {testStatus.message}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button onClick={handleTestConnection} disabled={testStatus.status === 'testing'} className="btn" style={{ background: 'transparent', border: '1px solid rgba(59, 130, 246, 0.5)', color: '#93c5fd' }}>
+                {testStatus.status === 'testing' ? 'Testing...' : 'Test Connection'}
+              </button>
               <button onClick={() => setShowSettings(false)} className="btn" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)' }}>Cancel</button>
               <button onClick={saveAISettings} className="btn" style={{ background: 'var(--accent-color)', color: '#000' }}>Save Settings</button>
             </div>
