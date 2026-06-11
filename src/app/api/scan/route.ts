@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     if (activeScan) {
       console.log(`Running active Nuclei scan against ${host}...`);
       try {
-        const { stdout } = await execPromise(`nuclei -u ${protocol}${host} -tags paloalto,panos -json -silent`);
+        const { stdout } = await execPromise(`nuclei -u ${protocol}${host} -tags paloalto,panos -jsonl -silent`);
         const lines = stdout.split('\n').filter(line => line.trim() !== '');
         for (const line of lines) {
           const result = JSON.parse(line);
