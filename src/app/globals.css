@@ -232,6 +232,9 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .vuln-card::before {
@@ -281,6 +284,14 @@ h1, h2, h3, h4, h5, h6 {
   gap: 1.5rem;
   overflow: hidden;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vuln-block {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .vuln-block h4 {
@@ -292,6 +303,8 @@ h1, h2, h3, h4, h5, h6 {
 .vuln-block p {
   color: var(--text-secondary);
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Fix block accent */
@@ -393,9 +406,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* React Markdown Styles */
 .ai-markdown-container {
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   overflow-x: auto;
   word-break: break-word;
+  overflow-wrap: break-word;
 }
 .ai-markdown-container h1, .ai-markdown-container h2, .ai-markdown-container h3 {
   margin-top: 1.5rem;
@@ -430,6 +446,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .ai-markdown-container table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
   display: block;
