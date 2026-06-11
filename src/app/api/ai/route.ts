@@ -63,7 +63,9 @@ export async function POST(req: Request) {
     return new Response(readableStream, {
       headers: {
         'Content-Type': 'text/plain',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no'
       }
     });
 
