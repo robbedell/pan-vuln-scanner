@@ -1,4 +1,5 @@
 import { cveDatabase, Vulnerability } from '@/lib/vulnerabilities';
+import { generateJSONReport, generateMarkdownReport } from '@/lib/reportGenerator';
 import VulnerabilityCard from './VulnerabilityCard';
 
 interface ResultsProps {
@@ -51,6 +52,23 @@ export default function ResultsDashboard({ results, targetVersion }: ResultsProp
             )}
           </div>
         </div>
+      </div>
+
+      <div className="slide-up" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', marginBottom: '2rem', animationDelay: '0.1s' }}>
+        <button 
+          onClick={() => generateMarkdownReport(results, targetVersion, cveDatabase)}
+          className="btn" 
+          style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', color: '#93c5fd', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
+        >
+          📥 Download Markdown Report
+        </button>
+        <button 
+          onClick={() => generateJSONReport(results, targetVersion, cveDatabase)}
+          className="btn" 
+          style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#e2e8f0', padding: '0.75rem 1rem', fontSize: '0.95rem', flex: 1 }}
+        >
+          📥 Download JSON Data
+        </button>
       </div>
 
       {results.isReachable && (
