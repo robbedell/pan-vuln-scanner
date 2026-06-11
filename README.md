@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PAN-OS Vulnerability Scanner
 
-## Getting Started
+A fast, Next.js-based web application that performs passive external reconnaissance against Palo Alto Networks firewalls. It checks for exposed GlobalProtect and Management interfaces and maps them against critical recent CVEs (2024–2026).
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Passive Reconnaissance**: Identifies exposed interfaces safely without executing disruptive exploit payloads.
+- **Accurate Fingerprinting**: Strictly identifies GlobalProtect and PAN-OS Management portals using precise HTML structure checks.
+- **CVE Database**: Automatically cross-references exposed interfaces with high-severity vulnerabilities like CVE-2024-3400, CVE-2026-0257, and CVE-2025-0108.
+- **Premium UI**: Modern, glassmorphism-inspired interface with a responsive dashboard.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting Started (Local Development)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
+- Node.js (v18 or higher recommended)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation & Run
 
-## Learn More
+1. Clone the repository and navigate into the project folder:
+   ```bash
+   git clone https://github.com/robbedell/pan-vuln-scanner.git
+   cd pan-vuln-scanner
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. Install the necessary dependencies:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Start the development server (runs on port 9999 by default):
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. Open your browser and navigate to [http://localhost:9999](http://localhost:9999).
 
-## Deploy on Vercel
+## Running via Docker (Production)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The application is fully containerized using Next.js standalone mode and can be run effortlessly on any system supporting Docker.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Build the Docker image:
+   ```bash
+   docker build -t pan-vuln-scanner .
+   ```
+
+2. Run the container on port 9999:
+   ```bash
+   docker run -p 9999:9999 pan-vuln-scanner
+   ```
+
+3. Open your browser and navigate to [http://localhost:9999](http://localhost:9999).
+
+## Disclaimer
+This tool is for educational and defensive auditing purposes only. Ensure you have explicit authorization before scanning any network infrastructure that does not belong to you.
