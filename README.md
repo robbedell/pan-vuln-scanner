@@ -57,12 +57,12 @@ The application is fully containerized using Next.js standalone mode. The Docker
    docker build -t pan-vuln-scanner .
    ```
 
-2. Run the container on port 9999:
+2. Run the container on port 9966:
    ```bash
-   docker run -p 9999:9999 pan-vuln-scanner
+   docker run -p 9966:9966 pan-vuln-scanner
    ```
 
-3. Open your browser and navigate to [http://localhost:9999](http://localhost:9999).
+3. Open your browser and navigate to [http://localhost:9966](http://localhost:9966).
 
 ## Disclaimer
 This tool is for educational and defensive auditing purposes only. Ensure you have explicit authorization before scanning any network infrastructure that does not belong to you, especially when using the Active Exploitation feature.

@@ -1,12 +1,11 @@
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat curl unzip
 
 # Install dependencies only when needed
 FROM base AS deps
-# Install curl and unzip to download nuclei, and compat libraries
-RUN apk add --no-cache libc6-compat curl unzip
 
 # Download and install Nuclei
-RUN curl -L -o nuclei.zip "https://github.com/projectdiscovery/nuclei/releases/download/v3.2.0/nuclei_3.2.0_linux_amd64.zip" \
+RUN curl -L -o nuclei.zip "https://github.com/projectdiscovery/nuclei/releases/download/v3.9.0/nuclei_3.9.0_linux_amd64.zip" \
     && unzip nuclei.zip \
     && mv nuclei /usr/local/bin/ \
     && rm nuclei.zip
@@ -38,6 +37,9 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy Nuclei from deps
+COPY --from=deps /usr/local/bin/nuclei /usr/local/bin/nuclei
+
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
@@ -51,9 +53,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 9999
+EXPOSE 9966
 
-ENV PORT 9999
+ENV PORT 9966
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
