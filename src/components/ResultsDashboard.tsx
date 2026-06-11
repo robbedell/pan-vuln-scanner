@@ -5,6 +5,7 @@ import { cveDatabase, Vulnerability } from '@/lib/vulnerabilities';
 import { generateJSONReport } from '@/lib/reportGenerator';
 import VulnerabilityCard from './VulnerabilityCard';
 import DashboardSummary from './DashboardSummary';
+import ChatBox from './ChatBox';
 
 interface ResultsProps {
   results: {
@@ -202,6 +203,9 @@ Be highly professional, detailed, and use Markdown tables and code blocks where 
           </div>
         </div>
       )}
+
+      {/* Floating Chat Box */}
+      <ChatBox results={results} aiConfig={aiConfig} />
     </div>
   );
 }

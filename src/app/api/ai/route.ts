@@ -4,9 +4,9 @@ import OpenAI from 'openai';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { prompt, systemMessage, baseURL, model, apiKey, disableStream } = body;
+    const { prompt, systemMessage, baseURL, model, apiKey, disableStream, messages } = body;
 
-    if (!baseURL || !model || !prompt) {
+    if (!baseURL || !model) {
       return NextResponse.json({ error: 'Missing required AI configuration parameters.' }, { status: 400 });
     }
 
@@ -15,13 +15,22 @@ export async function POST(req: Request) {
       apiKey: apiKey || 'sk-local', 
     });
 
+    let chatMessages = [];
+    if (messages && Array.isArray(messages)) {
+      chatMessages = messages;
+    } else if (prompt) {
+      chatMessages = [
+        { role: 'system', content: systemMessage || 'You are an expert Palo Alto Networks security analyst.' },
+        { role: 'user', content: prompt }
+      ];
+    } else {
+      return NextResponse.json({ error: 'Missing prompt or messages array.' }, { status: 400 });
+    }
+
     if (disableStream) {
       const response = await openai.chat.completions.create({
         model: model,
-        messages: [
-          { role: 'system', content: systemMessage || 'You are an expert Palo Alto Networks security analyst.' },
-          { role: 'user', content: prompt }
-        ],
+        messages: chatMessages,
         temperature: 0.2,
       });
       return NextResponse.json({ content: response.choices[0].message.content });
@@ -29,10 +38,7 @@ export async function POST(req: Request) {
 
     const stream = await openai.chat.completions.create({
       model: model,
-      messages: [
-        { role: 'system', content: systemMessage || 'You are an expert Palo Alto Networks security analyst.' },
-        { role: 'user', content: prompt }
-      ],
+      messages: chatMessages,
       temperature: 0.2,
       stream: true,
     });
