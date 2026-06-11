@@ -112,7 +112,7 @@ export async function POST(req: Request) {
             await new Promise<void>((resolve) => {
                // Use spawn directly instead of execPromise for streaming stdout/stderr
                const { spawn } = require('child_process');
-               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl', '-v']);
+               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl']);
                
                nuclei.stdout.on('data', (data: Buffer) => {
                  const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
@@ -163,6 +163,12 @@ export async function POST(req: Request) {
                   const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
                   for (const line of lines) {
                     const cleanLine = line.replace(/\x1B\[\d+m/g, ''); // strip ansi
+                    // Filter out noisy ProjectDiscovery output
+                    if (cleanLine.includes('[VER]')) continue;
+                    if (cleanLine.includes('Could not parse template')) continue;
+                    if (cleanLine.includes('templates with runtime error')) continue;
+                    if (cleanLine.includes('Scan results upload to cloud')) continue;
+                    
                     sendJSON({ type: 'log', message: cleanLine });
                   }
                });
