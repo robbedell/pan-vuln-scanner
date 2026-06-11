@@ -15,6 +15,7 @@ interface Message {
 
 export default function ChatBox({ results, aiConfig }: ChatBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -126,10 +127,25 @@ Answer the user's questions about these findings, how to remediate them, or expl
       </button>
 
       {isOpen && (
-        <div className="chat-window fade-in">
-          <div className="chat-header">
+        <div className={`chat-window fade-in ${isExpanded ? 'expanded' : ''}`}>
+          <div className="chat-header" style={{ cursor: 'move' }}>
             <h3>🤖 Security Analyst</h3>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)} 
+                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1rem' }}
+                title={isExpanded ? "Minimize" : "Expand"}
+              >
+                {isExpanded ? '🗗' : '🗖'}
+              </button>
+              <button 
+                onClick={() => setIsOpen(false)} 
+                style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           
           <div className="chat-messages">
