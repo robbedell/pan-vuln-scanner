@@ -439,24 +439,29 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 1rem;
   border: 1px solid rgba(255,255,255,0.1);
   max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 .ai-markdown-container pre code {
   background: transparent;
   padding: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 .ai-markdown-container table {
   width: 100%;
   max-width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
+  table-layout: fixed;
 }
 .ai-markdown-container th, .ai-markdown-container td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .ai-markdown-container th {
   background: rgba(0,0,0,0.3);
