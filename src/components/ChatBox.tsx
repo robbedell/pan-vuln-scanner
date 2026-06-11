@@ -19,7 +19,14 @@ export default function ChatBox({ results, aiConfig }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleCopy = (content: string, idx: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   const isExposed = (vuln: Vulnerability) => {
     if (vuln.triggerInterface === 'GlobalProtect') return results.hasGlobalProtect;
@@ -152,8 +159,29 @@ Answer the user's questions about these findings, how to remediate them, or expl
             {messages.filter(m => m.role !== 'system').map((msg, idx) => (
               <div key={idx} className={`chat-message ${msg.role}`}>
                 {msg.role === 'assistant' ? (
-                  <div className="ai-markdown-container" style={{ fontSize: '0.9rem' }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      onClick={() => handleCopy(msg.content, idx)}
+                      style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-8px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        color: '#94a3b8',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(4px)'
+                      }}
+                      title="Copy to clipboard"
+                    >
+                      {copiedIndex === idx ? '✓ Copied' : '📋 Copy'}
+                    </button>
+                    <div className="ai-markdown-container" style={{ fontSize: '0.9rem' }}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                    </div>
                   </div>
                 ) : (
                   msg.content
