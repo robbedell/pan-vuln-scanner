@@ -112,11 +112,18 @@ export async function POST(req: Request) {
             await new Promise<void>((resolve) => {
                // Use spawn directly instead of execPromise for streaming stdout/stderr
                const { spawn } = require('child_process');
-               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl']);
+               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl', '-stats', '-si', '2']);
+               
+               let stdoutBuffer = '';
+               let stderrBuffer = '';
                
                nuclei.stdout.on('data', (data: Buffer) => {
-                 const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
+                 stdoutBuffer += data.toString();
+                 const lines = stdoutBuffer.split('\n');
+                 stdoutBuffer = lines.pop() || '';
+                 
                  for (const line of lines) {
+                   if (!line.trim()) continue;
                    try {
                      const result = JSON.parse(line);
                      if (result['template-id']) {
@@ -130,8 +137,6 @@ export async function POST(req: Request) {
                             const extractedStr = result['extracted-results'].join('\\n');
                             sendJSON({ type: 'log', message: `[🤖 AI] Analyzing extracted data payload...` });
                             
-                            // Fire & forget AI analysis so we don't block the stream loop heavily, 
-                            // but we are inside an async callback so we can just await it.
                             (async () => {
                               try {
                                 const { OpenAI } = require('openai');
@@ -160,8 +165,12 @@ export async function POST(req: Request) {
                });
                
                nuclei.stderr.on('data', (data: Buffer) => {
-                  const lines = data.toString().split('\n').filter((l: string) => l.trim() !== '');
+                  stderrBuffer += data.toString();
+                  const lines = stderrBuffer.split('\n');
+                  stderrBuffer = lines.pop() || '';
+                  
                   for (const line of lines) {
+                    if (!line.trim()) continue;
                     const cleanLine = line.replace(/\x1B\[\d+m/g, ''); // strip ansi
                     // Filter out noisy ProjectDiscovery output
                     if (cleanLine.includes('[VER]')) continue;
