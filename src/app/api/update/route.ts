@@ -14,7 +14,7 @@ export async function POST() {
 
     // 2. Install any new dependencies if package.json changed
     console.log('Running npm install...');
-    const { stdout: npmOut, stderr: npmErr } = await execPromise('npm install');
+    const { stdout: npmOut, stderr: npmErr } = await execPromise('npm install --include=dev');
     console.log('NPM Install Output:', npmOut);
     if (npmErr) console.error('NPM Install Stderr:', npmErr);
 
