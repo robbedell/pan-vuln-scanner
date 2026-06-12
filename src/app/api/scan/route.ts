@@ -112,7 +112,7 @@ export async function POST(req: Request) {
             await new Promise<void>((resolve) => {
                // Use spawn directly instead of execPromise for streaming stdout/stderr
                const { spawn } = require('child_process');
-               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl', '-stats', '-si', '2']);
+               const nuclei = spawn('nuclei', ['-u', `${protocol}${host}`, '-tags', 'paloalto,panos', '-jsonl', '-stats', '-si', '2', '-v']);
                
                let stdoutBuffer = '';
                let stderrBuffer = '';
