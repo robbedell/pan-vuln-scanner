@@ -1,8 +1,6 @@
-FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat curl unzip
+FROM node:20-alpine AS runner
 
-# Install dependencies only when needed
-FROM base AS deps
+RUN apk add --no-cache libc6-compat curl unzip git
 
 # Download and install Nuclei
 RUN curl -L -o nuclei.zip "https://github.com/projectdiscovery/nuclei/releases/download/v3.9.0/nuclei_3.9.0_linux_amd64.zip" \
@@ -12,51 +10,30 @@ RUN curl -L -o nuclei.zip "https://github.com/projectdiscovery/nuclei/releases/d
 
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci
-
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy the application code
 COPY . .
 
-# Next.js telemetry is disabled
-ENV NEXT_TELEMETRY_DISABLED 1
+# Make start.sh executable
+RUN chmod +x start.sh
 
+# Install dependencies and build
+RUN npm ci
 RUN npm run build
-
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV IS_DOCKER "true"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy Nuclei from deps
-COPY --from=deps /usr/local/bin/nuclei /usr/local/bin/nuclei
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Change ownership of the app directory so the nextjs user can run git pull and npm install
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
 EXPOSE 9966
-
 ENV PORT 9966
-# set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["./start.sh"]

@@ -48,6 +48,13 @@ The scanner acts as an intelligent proxy, bypassing CORS to securely route reque
 
 5. **Configure AI:** Click the ⚙️ icon in the top right corner. Enter your local API base URL (e.g. `http://localhost:3000/api` or `http://localhost:11434/v1`), your model name, and your API Key (for Open WebUI, you can extract the `token` from your browser's Local Storage if you lack admin privileges to generate one). Hit **Test Connection**.
 
+Alternatively, you can set default AI configurations in a `.env.local` file at the root of the project:
+```env
+NEXT_PUBLIC_AI_BASE_URL=http://localhost:11434/v1
+NEXT_PUBLIC_AI_MODEL=llama3
+NEXT_PUBLIC_AI_API_KEY=sk-local
+```
+
 ## Running via Docker (Production)
 
 The application is fully containerized using Next.js standalone mode. The Docker container automatically downloads and installs the Nuclei engine, so no host-level dependencies are required!

@@ -18,13 +18,22 @@ export async function POST() {
     console.log('NPM Install Output:', npmOut);
     if (npmErr) console.error('NPM Install Stderr:', npmErr);
 
-    // Note: Next.js 'npm run dev' automatically hot reloads file changes.
-    // However, if structural dependencies or next.config.js changed, the process
-    // may need a manual restart by the user. For standard updates, HMR is sufficient.
+    // 3. Handle Docker restart via start.sh
+    if (process.env.IS_DOCKER === 'true') {
+      console.log('Running npm run build inside Docker...');
+      await execPromise('npm run build');
+
+      // Schedule process exit to allow the response to return first.
+      // The wrapper script (start.sh) will catch the exit and restart the process.
+      setTimeout(() => {
+        console.log('Restarting Node process for Docker update...');
+        process.exit(0);
+      }, 1500);
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Application updated successfully!',
+      message: process.env.IS_DOCKER === 'true' ? 'Application updated! Restarting container...' : 'Application updated successfully!',
       details: gitOut 
     });
   } catch (error: any) {

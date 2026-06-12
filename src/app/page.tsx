@@ -26,9 +26,9 @@ export default function Home() {
   const [testStatus, setTestStatus] = useState<{status: 'idle' | 'testing' | 'success' | 'error', message: string}>({status: 'idle', message: ''});
 
   useEffect(() => {
-    setAiBaseUrl(localStorage.getItem('aiBaseUrl') || 'http://localhost:11434/v1');
-    setAiModel(localStorage.getItem('aiModel') || 'llama3');
-    setAiApiKey(localStorage.getItem('aiApiKey') || 'sk-local');
+    setAiBaseUrl(localStorage.getItem('aiBaseUrl') || process.env.NEXT_PUBLIC_AI_BASE_URL || 'http://localhost:11434/v1');
+    setAiModel(localStorage.getItem('aiModel') || process.env.NEXT_PUBLIC_AI_MODEL || 'llama3');
+    setAiApiKey(localStorage.getItem('aiApiKey') || process.env.NEXT_PUBLIC_AI_API_KEY || 'sk-local');
   }, []);
 
   const saveAISettings = () => {
