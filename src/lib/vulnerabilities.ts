@@ -22,7 +22,7 @@ export const cveDatabase: Vulnerability[] = [
     howToFix: 'Immediately apply the latest security hotfixes for your specific PAN-OS version. Ensure that vulnerability protection profiles are applied to GlobalProtect interfaces. Temporary mitigations involving disabling telemetry have been proven insufficient, so patching is the only complete fix.',
     affectedVersions: 'PAN-OS < 11.1.2-h3, < 11.0.4-h1, < 10.2.9-h1',
     rootCause: 'The firewall fails to properly sanitize the `SESSID` (session ID) cookie. An attacker can use path traversal techniques (`../../../`) inside the `SESSID` to create a 0-byte file anywhere on the filesystem. By dropping an empty file named with shell metacharacters (e.g. `` `whoami` ``) into the `/opt/panlogs/tmp/device_telemetry/hour/` directory, a background telemetry processing daemon will blindly execute the filename as a shell command with root privileges.',
-    testSetup: '1. Deploy a vulnerable PAN-OS firmware version (e.g. 10.2.9 or older).\n2. Navigate to Network > GlobalProtect > Gateways or Portals.\n3. Create a Gateway and bind it to an external-facing interface with a public/routable IP.\n4. Commit the configuration. (Note: Device Telemetry does NOT need to be enabled for this to be exploitable; simply exposing the GP portal exposes the vulnerable SESSID parser).'
+    testSetup: '1. Deploy a vulnerable PAN-OS firmware version (e.g. 10.2.9 or older).\n2. Navigate to Network > GlobalProtect > Gateways or Portals.\n3. Create a Gateway and bind it to an external-facing interface with a public/routable IP.\n4. Commit the configuration. (Note: Device Telemetry does NOT need to be enabled for this to be exploitable; simply exposing the GP portal exposes the vulnerable SESSID parser).\n5. CRITICAL OAST REQUIREMENT: For automated scanners to confirm this blind OS command injection, the firewall must have outbound DNS and HTTP/S access to resolve and callback to the scanner\'s interact.sh/OAST payload. An isolated air-gapped lab will result in false negatives.'
   },
   {
     id: 'CVE-2025-0108',
@@ -82,7 +82,7 @@ export const cveDatabase: Vulnerability[] = [
     howToFix: 'Ensure the Management Web Interface is completely isolated from the internet. Enforce strict role-based access control (RBAC) and audit administrator activity. Apply the security patch provided by Palo Alto Networks.',
     affectedVersions: 'PAN-OS < 11.2.6-h1, < 11.1.8-h2, < 10.2.15-h1',
     rootCause: 'A diagnostic ping/traceroute wrapper utility in the web interface and CLI fails to sanitize input. When an administrator inputs a target IP address formatted as `127.0.0.1; rm -rf /`, the underlying system shell interprets the semicolon and executes the appended command as root, breaking out of the restricted PAN-OS CLI jail.',
-    testSetup: '1. Deploy a vulnerable PAN-OS version.\n2. Expose the Management interface.\n3. Ensure you have an administrator account with access to network diagnostic tools (Ping/Traceroute) to reproduce the injection.'
+    testSetup: '1. Deploy a vulnerable PAN-OS version.\n2. Expose the Management interface.\n3. Ensure you have an administrator account with access to network diagnostic tools (Ping/Traceroute) to reproduce the injection.\n4. CRITICAL OAST REQUIREMENT: As this is a blind command injection, ensure the management interface has outbound DNS and ICMP/HTTP routing capabilities so the callback payload can successfully reach the scanner\'s OAST server.'
   },
   {
     id: 'CVE-2026-0300',
@@ -94,7 +94,7 @@ export const cveDatabase: Vulnerability[] = [
     howToFix: 'If Captive Portal is not required, disable it immediately. Ensure all Management and Portal interfaces are restricted from public internet access. Apply the latest PAN-OS patch.',
     affectedVersions: 'PAN-OS < 11.2.6-h2, < 11.1.9-h1',
     rootCause: 'The `userid-portal` daemon statically allocates a buffer for processing the `User-Agent` HTTP header during the initial Captive Portal redirect. By sending a massive `User-Agent` string exceeding 4096 bytes, an attacker overwrites the return pointer on the stack, allowing them to redirect execution flow to a malicious ROP chain and execute shellcode.',
-    testSetup: '1. Deploy a vulnerable PAN-OS firmware.\n2. Navigate to Network > Interfaces and enable an interface.\n3. Navigate to Device > User Identification > Captive Portal and enable the Captive Portal service, binding it to the exposed interface.'
+    testSetup: '1. Deploy a vulnerable PAN-OS firmware.\n2. Navigate to Network > Interfaces and enable an interface.\n3. Navigate to Device > User Identification > Captive Portal and enable the Captive Portal service, binding it to the exposed interface.\n4. CRITICAL OAST REQUIREMENT: If validating RCE via shellcode callbacks, the firewall data plane must have outbound routing to the scanner\'s OAST domain.'
   },
   {
     id: 'CVE-2026-0263',
